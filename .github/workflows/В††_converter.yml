@@ -18,7 +18,7 @@ jobs:
           ref: dev
 
       - name: Converting
-        run: pwsh .zed/convert_to_В††.ps1
+        run: pwsh ./convert_to_В††.ps1
         working-directory: .zed
 
       - name: Configure Git
