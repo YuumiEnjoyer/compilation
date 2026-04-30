@@ -8,7 +8,7 @@ permissions:
   contents: write
 
 jobs:
-  generate-and-push:
+  converting:
     runs-on: windows-latest
 
     steps:
@@ -32,7 +32,7 @@ jobs:
           if ($changes) {
             git add .
             git commit -m "🤖 Auto-generated changes from dev push"
-            git push origin HEAD:master
+            git push --force origin HEAD:master
           } else {
             Write-Host "✅ Script made no changes. Skipping commit."
           }

@@ -30,7 +30,6 @@ foreach ($line in $headerContent) {
 }
 
 Write-Host "Loaded $($mappings.Count) mappings from $headerPath"
-echo $mappings
 
 $srcFiles = Get-ChildItem -Path $SourceDir -Filter "*.cpp" -File
 
@@ -42,11 +41,6 @@ foreach ($file in $srcFiles) {
 
     foreach ($mapping in $sortedMappings) {
         $pattern = "$($mapping.Value)"
-        if ($mapping.Value -eq 'setlocale(LC_ALL, ".utf8")') {
-            echo ($content -match $mapping.Value)
-            echo "[$($mapping.Value)]"
-            echo $content
-        }
         $content = $content -creplace [regex]::Escape($mapping.Value), $mapping.Key
     }
 
