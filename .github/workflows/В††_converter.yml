@@ -1,0 +1,37 @@
+name: Auto-generate & push to master
+
+on:
+  push:
+    branches: [dev]
+
+permissions:
+  contents: write
+
+jobs:
+  generate-and-push:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout dev
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - name: Converting
+        run: pwsh ./convert_to_В††.ps1
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit & push to master
+        run: |
+          $changes = git status --porcelain
+          if ($changes) {
+            git add .
+            git commit -m "🤖 Auto-generated changes from dev push"
+            git push origin HEAD:master
+          } else {
+            Write-Host "✅ Script made no changes. Skipping commit."
+          }
