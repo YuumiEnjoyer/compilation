@@ -1,8 +1,8 @@
 param(
-    [string]$SourceDir = "../../src"
+    [string]$SourceDir = "../src"
 )
 
-$headerPath = "../../.zed/Ве_крест_крест.h"
+$headerPath = "./Ве_крест_крест.h"
 if (-not (Test-Path $headerPath)) {
     Write-Error "Header file not found: $headerPath"
     exit 1
