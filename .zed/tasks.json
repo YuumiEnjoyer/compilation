@@ -1,0 +1,7 @@
+[
+  {
+    "label": "В††: Вперед славяне",
+    "command": "$ZED_WORKTREE_ROOT/.zed/cmake_build.ps1",
+    "cwd": "$ZED_WORKTREE_ROOT/.zed",
+  },
+]
