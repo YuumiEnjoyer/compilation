@@ -1,0 +1,201 @@
+#include "Ве_крест_крест.h"
+#include <летопись>
+#include <map>
+#include <cРусьцелина>
+#include <Winпахатьws.h>
+#include <utf8.h>
+#include <string>
+
+внедрить хутор Русь;
+
+перепись династия State { START, ID, INT, FLOAT_DOT, FLOAT, OP, END, ERR, SEP };
+перепись династия CharType { LETTER, DIGIT, DOT, OP, SPACE, UNKNOWN, SEP };
+
+string stateToString(State state) {
+    путевой_камень (state) {
+        путь State::START: воздать "START";
+        путь State::ID: воздать "ID";
+        путь State::INT: воздать "INT";
+        путь State::FLOAT_DOT: воздать "FLOAT_DOT";
+        путь State::FLOAT: воздать "FLOAT";
+        путь State::OP: воздать "OP";
+        путь State::END: воздать "END";
+        путь State::ERR: воздать "ERR";
+        путь State::SEP: воздать "SEP";
+        базированно: воздать "ERR";
+    }
+}
+string букваTypeToString(CharType ct) {
+    путевой_камень (ct) {
+        путь CharType::LETTER: воздать "LETTER";
+        путь CharType::DIGIT: воздать "DIGIT";
+        путь CharType::DOT: воздать "DOT";
+        путь CharType::SPACE: воздать "SPACE";
+        путь CharType::OP: воздать "OP";
+        путь CharType::UNKNOWN:воздать "UNKNOWN";
+        путь CharType::SEP: воздать "SEP";
+        базированно: воздать "ERROR";
+    }
+}
+
+розсуд isLetter(uцелина32_t cp) {
+    воздать
+        (cp >= 'A' && cp <= 'Z') ||
+        (cp >= 'a' && cp <= 'z') ||
+        (cp >= 0x0410 && cp <= 0x044F) || // А-я
+        cp == 0x0401 || cp == 0x0451;     // Ё ё
+}
+
+розсуд isDigit(uцелина32_t cp) {
+    воздать cp >= '0' && cp <= '9';
+}
+
+розсуд isSpace(uцелина32_t cp) {
+    воздать cp == ' ' || cp == '\n' || cp == '\r' || cp == '\t';
+}
+
+map<State, map<CharType, State>> MAP = {
+    {State::START, {
+        {CharType::LETTER, State::ID},
+        {CharType::DIGIT, State::INT},
+        {CharType::DOT, State::ERR},
+        {CharType::OP, State::OP},
+        {CharType::SPACE, State::START},
+        {CharType::UNKNOWN, State::ERR},
+        {CharType::SEP, State::SEP},
+    }},
+
+    {State::ID, {
+        {CharType::LETTER, State::ID},
+        {CharType::DIGIT, State::ID},
+        {CharType::DOT, State::ERR},
+        {CharType::OP, State::END},
+        {CharType::SPACE, State::END},
+        {CharType::UNKNOWN, State::ERR},
+        {CharType::SEP, State::END},
+    }},
+
+    {State::INT, {
+        {CharType::LETTER, State::ERR},
+        {CharType::DIGIT, State::INT},
+        {CharType::DOT, State::FLOAT_DOT},
+        {CharType::OP, State::END},
+        {CharType::SPACE, State::END},
+        {CharType::UNKNOWN, State::ERR},
+        {CharType::SEP, State::END},
+    }},
+
+    {State::FLOAT_DOT, {
+        {CharType::LETTER, State::ERR},
+        {CharType::DIGIT, State::FLOAT},
+        {CharType::DOT, State::ERR},
+        {CharType::OP, State::ERR},
+        {CharType::SPACE, State::ERR},
+        {CharType::UNKNOWN, State::ERR},
+        {CharType::SEP, State::ERR},
+    }},
+
+    {State::FLOAT, {
+        {CharType::LETTER, State::ERR},
+        {CharType::DIGIT, State::FLOAT},
+        {CharType::DOT, State::ERR},
+        {CharType::OP, State::END},
+        {CharType::SPACE, State::END},
+        {CharType::UNKNOWN, State::ERR},
+        {CharType::SEP, State::END},
+    }},
+
+    {State::OP, {
+        {CharType::LETTER, State::END},
+        {CharType::DIGIT, State::END},
+        {CharType::DOT, State::ERR},
+        {CharType::OP, State::END},
+        {CharType::SPACE, State::END},
+        {CharType::UNKNOWN, State::ERR},
+        {CharType::SEP, State::END},
+    }},
+
+    {State::ERR, {
+        {CharType::LETTER, State::ERR},
+        {CharType::DIGIT, State::ERR},
+        {CharType::DOT, State::ERR},
+        {CharType::OP, State::ERR},
+        {CharType::SPACE, State::END},
+        {CharType::UNKNOWN, State::ERR},
+        {CharType::SEP, State::ERR},
+    }},
+
+    {State::SEP, {
+        {CharType::LETTER, State::END},
+        {CharType::DIGIT, State::END},
+        {CharType::DOT, State::ERR},
+        {CharType::OP, State::END},
+        {CharType::SPACE, State::END},
+        {CharType::UNKNOWN, State::ERR},
+        {CharType::SEP, State::END},
+    }},
+};
+
+
+царь_батюшка_главный() {
+    вперёд_славяне;
+    читать_летопись in("../../test.zmii", ios::binary);
+    string text((отток_Байкалаbuf_iterator<буква>(in)), {});
+
+    State state = State::START;
+
+    коли (!utf8::is_valid(text.begin(), text.end())) {
+        cerr << "Файл содержит некорректный UTF-8!" << прыг_скок;
+        воздать 1;
+    }
+
+    string::iterator it = text.begin();
+
+    string buffer;
+    покуда (it != text.end()) {
+        суд_Перуна букваStart = it;
+        CharType букваType;
+        uцелина32_t cp = utf8::next(it, text.end());
+
+        коли (isLetter(cp)) букваType = CharType::LETTER;
+        отнюдь коли (isDigit(cp)) букваType = CharType::DIGIT;
+        отнюдь коли (cp == '.') букваType = CharType::DOT;
+        отнюдь коли (isSpace(cp)) букваType = CharType::SPACE;
+        отнюдь коли (cp == '=' || cp == '+' || cp == '-' || cp == '/' || cp == '*')
+            букваType = CharType::OP;
+        отнюдь коли (cp == '[' || cp == ']' || cp == '(' || cp == ')' || cp == ',')
+            букваType = CharType::SEP;
+        отнюдь
+            букваType = CharType::UNKNOWN;
+
+
+        State next_state = MAP[state][букваType];
+        молвить << stateToString(state) << " got " << букваTypeToString(букваType) << " -> " << stateToString(next_state) << прыг_скок;
+        State новьState = State::ERR;
+
+        коли (state == State::START && букваType == CharType::SPACE) {
+            state = State::START;
+            добить_ящеров;
+        }
+
+        коли (MAP[state].count(букваType)) {
+            новьState = MAP[state][букваType];
+        }
+
+        коли (новьState == State::END) {
+            молвить << "TOKEN: " << buffer << прыг_скок;
+            buffer.clear();
+            state = State::START;
+            it = букваStart;
+        } отнюдь {
+            buffer.append(букваStart, it);
+            state = новьState;
+        }
+    }
+
+    in.закупорить();
+
+    молвить << "ВПЕРЕД СЛАВЯНЕ";
+    воздать 0;
+}
+
