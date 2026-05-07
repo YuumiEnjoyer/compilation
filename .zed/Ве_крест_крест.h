@@ -16,6 +16,7 @@
 #include <ctime>
 #include <cmath>
 #include <ctime>
+#include <map>
 
 #define СУДЬБЫ_ПОДАРОК RAND_MAX
 #define выкарчевать sqrt
@@ -29,6 +30,7 @@
 #define Русь std
 #define молвить cout
 #define внемлить cin
+#define скорбь cerr
 #define воздать return
 
 #define пахать do
@@ -90,6 +92,11 @@
 #define младший second
 #define оператор operator
 #define двинуть move
+#define вСтрой append
+#define начало begin
+#define конец end
+#define рассчитась count
+#define вычистить clear
 
 #define беда exception
 #define что_случилось what
@@ -105,6 +112,9 @@
 #define отток_Байкала istream
 #define меняло swap
 #define отщипнуть get
+#define карта map
+#define нули_да_целиночки ios::binary
+#define пробежка_по_оттоку_Байкала istreambuf_iterator
 
 внедрить целина = int;
 внедрить вель_дробь = double;
@@ -117,8 +127,10 @@
 внедрить Петр_Первый = long long;
 внедрить мерило = size_t;
 внедрить розсуд = bool;
+внедрить писарь = std::ostream;
+внедрить грамота = std::iostream;
 
-внедрить однобокая_целина = unsigned int;
+внедрить однобокая_целина = uint32_t;
 внедрить однобокая_буква = unsigned char;
 внедрить однобокий_карлик = unsigned short;
 внедрить однобокий_долговязый = unsigned long;
