@@ -14,27 +14,27 @@ enum class CharType { LETTER, DIGIT, DOT, OP, SPACE, UNKNOWN, SEP };
 string stateToString(State state) {
     switch (state) {
         case State::START: return "START";
-        case State::ID:  return "ID";
-        case State::INT:  return "INT";
-        case State::FLOAT_DOT:  return "FLOAT_DOT";
-        case State::FLOAT:  return "FLOAT";
-        case State::OP:     return "OP";
-        case State::END:     return "END";
-        case State::ERR:     return "ERR";
-        case State::SEP:     return "SEP";
-        default:               return "ERR";
+        case State::ID: return "ID";
+        case State::INT: return "INT";
+        case State::FLOAT_DOT: return "FLOAT_DOT";
+        case State::FLOAT: return "FLOAT";
+        case State::OP: return "OP";
+        case State::END: return "END";
+        case State::ERR: return "ERR";
+        case State::SEP: return "SEP";
+        default: return "ERR";
     }
 }
 string charTypeToString(CharType ct) {
     switch (ct) {
         case CharType::LETTER: return "LETTER";
-        case CharType::DIGIT:  return "DIGIT";
-        case CharType::DOT:    return "DOT";
-        case CharType::SPACE:  return "SPACE";
-        case CharType::OP:     return "OP";
+        case CharType::DIGIT: return "DIGIT";
+        case CharType::DOT: return "DOT";
+        case CharType::SPACE: return "SPACE";
+        case CharType::OP: return "OP";
         case CharType::UNKNOWN:return "UNKNOWN";
-        case CharType::SEP:     return "SEP";
-        default:               return "ERROR";
+        case CharType::SEP: return "SEP";
+        default: return "ERROR";
     }
 }
 
@@ -139,7 +139,7 @@ map<State, map<CharType, State>> MAP = {
 
 int main() {
     setlocale(LC_ALL, ".utf8");
-    ifstream in("C:/Users/akzak/Desktop/TSU/compilation/test.zmii", ios::binary);
+    ifstream in("../../test.zmii", ios::binary);
     string text((istreambuf_iterator<char>(in)), {});
 
     State state = State::START;
@@ -183,13 +183,9 @@ int main() {
         }
 
         if (newState == State::END) {
-            //cout << "TOKEN: " << buffer << endl;
-            cout << "TOKEN: " << tokenType(buffer, state) << " \"" << buffer << "\"" << endl;
+            cout << "TOKEN: " << buffer << endl;
             buffer.clear();
             state = State::START;
-
-            // этот символ уже относится к следующему токену
-            // поэтому откатываем итератор назад
             it = charStart;
         } else {
             buffer.append(charStart, it);
