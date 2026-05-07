@@ -1,17 +1,15 @@
 #include <iostream>
 #include <fstream>
 #include <map>
-#include <cctype>
 #include <cstdint>
 #include <Windows.h>
-#include <cstdio>
 #include <utf8.h>
 #include <string>
 
 using namespace std;
 
-enum class State { START, ID, INT, FLOAT_DOT, FLOAT, OP, END, ERR };
-enum class CharType { LETTER, DIGIT, DOT, OP, SPACE, UNKNOWN };
+enum class State { START, ID, INT, FLOAT_DOT, FLOAT, OP, END, ERR, SEP };
+enum class CharType { LETTER, DIGIT, DOT, OP, SPACE, UNKNOWN, SEP };
 
 string stateToString(State state) {
     switch (state) {
@@ -23,6 +21,7 @@ string stateToString(State state) {
         case State::OP:     return "OP";
         case State::END:     return "END";
         case State::ERR:     return "ERR";
+        case State::SEP:     return "SEP";
         default:               return "ERR";
     }
 }
@@ -34,6 +33,7 @@ string charTypeToString(CharType ct) {
         case CharType::SPACE:  return "SPACE";
         case CharType::OP:     return "OP";
         case CharType::UNKNOWN:return "UNKNOWN";
+        case CharType::SEP:     return "SEP";
         default:               return "ERROR";
     }
 }
@@ -62,6 +62,7 @@ map<State, map<CharType, State>> MAP = {
         {CharType::OP, State::OP},
         {CharType::SPACE, State::START},
         {CharType::UNKNOWN, State::ERR},
+        {CharType::SEP, State::SEP},
     }},
 
     {State::ID, {
@@ -71,6 +72,7 @@ map<State, map<CharType, State>> MAP = {
         {CharType::OP, State::END},
         {CharType::SPACE, State::END},
         {CharType::UNKNOWN, State::ERR},
+        {CharType::SEP, State::END},
     }},
 
     {State::INT, {
@@ -80,6 +82,7 @@ map<State, map<CharType, State>> MAP = {
         {CharType::OP, State::END},
         {CharType::SPACE, State::END},
         {CharType::UNKNOWN, State::ERR},
+        {CharType::SEP, State::END},
     }},
 
     {State::FLOAT_DOT, {
@@ -89,6 +92,7 @@ map<State, map<CharType, State>> MAP = {
         {CharType::OP, State::ERR},
         {CharType::SPACE, State::ERR},
         {CharType::UNKNOWN, State::ERR},
+        {CharType::SEP, State::ERR},
     }},
 
     {State::FLOAT, {
@@ -98,6 +102,7 @@ map<State, map<CharType, State>> MAP = {
         {CharType::OP, State::END},
         {CharType::SPACE, State::END},
         {CharType::UNKNOWN, State::ERR},
+        {CharType::SEP, State::END},
     }},
 
     {State::OP, {
@@ -107,6 +112,7 @@ map<State, map<CharType, State>> MAP = {
         {CharType::OP, State::END},
         {CharType::SPACE, State::END},
         {CharType::UNKNOWN, State::ERR},
+        {CharType::SEP, State::END},
     }},
 
     {State::ERR, {
@@ -116,6 +122,17 @@ map<State, map<CharType, State>> MAP = {
         {CharType::OP, State::ERR},
         {CharType::SPACE, State::END},
         {CharType::UNKNOWN, State::ERR},
+        {CharType::SEP, State::ERR},
+    }},
+
+    {State::SEP, {
+        {CharType::LETTER, State::END},
+        {CharType::DIGIT, State::END},
+        {CharType::DOT, State::ERR},
+        {CharType::OP, State::END},
+        {CharType::SPACE, State::END},
+        {CharType::UNKNOWN, State::ERR},
+        {CharType::SEP, State::END},
     }},
 };
 
@@ -146,6 +163,8 @@ int main() {
         else if (isSpace(cp)) charType = CharType::SPACE;
         else if (cp == '=' || cp == '+' || cp == '-' || cp == '/' || cp == '*')
             charType = CharType::OP;
+        else if (cp == '[' || cp == ']' || cp == '(' || cp == ')' || cp == ',')
+            charType = CharType::SEP;
         else
             charType = CharType::UNKNOWN;
 
@@ -164,8 +183,8 @@ int main() {
         }
 
         if (newState == State::END) {
-            cout << "TOKEN: " << buffer << endl;
-
+            //cout << "TOKEN: " << buffer << endl;
+            cout << "TOKEN: " << tokenType(buffer, state) << " \"" << buffer << "\"" << endl;
             buffer.clear();
             state = State::START;
 

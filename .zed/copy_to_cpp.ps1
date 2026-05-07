@@ -21,4 +21,4 @@ $fileList = (@(
 
 $updatedCmakeContent = $cmakeContent -replace '\{files\}', $fileList
 Set-Content -Path (Join-Path $destDir "CMakeLists.txt") -Value $updatedCmakeContent
-Copy-Item ./utfcpp ./build/cpp/utfcpp -recurse
+Copy-Item ./utfcpp ./build/cpp/utfcpp -recurse -Force
