@@ -1,42 +1,14 @@
 #include <iostream>
 #include <fstream>
-#include <map>
 #include <cstdint>
 #include <Windows.h>
+#include <list>
 #include <utf8.h>
 #include <string>
+#include "карта.hpp"
 
 using namespace std;
 
-enum class State { START, ID, INT, FLOAT_DOT, FLOAT, OP, END, ERR, SEP };
-enum class CharType { LETTER, DIGIT, DOT, OP, SPACE, UNKNOWN, SEP };
-
-string stateToString(State state) {
-    switch (state) {
-        case State::START: return "START";
-        case State::ID:  return "ID";
-        case State::INT:  return "INT";
-        case State::FLOAT_DOT:  return "FLOAT_DOT";
-        case State::FLOAT:  return "FLOAT";
-        case State::OP:     return "OP";
-        case State::END:     return "END";
-        case State::ERR:     return "ERR";
-        case State::SEP:     return "SEP";
-        default:               return "ERR";
-    }
-}
-string charTypeToString(CharType ct) {
-    switch (ct) {
-        case CharType::LETTER: return "LETTER";
-        case CharType::DIGIT:  return "DIGIT";
-        case CharType::DOT:    return "DOT";
-        case CharType::SPACE:  return "SPACE";
-        case CharType::OP:     return "OP";
-        case CharType::UNKNOWN:return "UNKNOWN";
-        case CharType::SEP:     return "SEP";
-        default:               return "ERROR";
-    }
-}
 
 bool isLetter(uint32_t cp) {
     return
@@ -51,103 +23,43 @@ bool isDigit(uint32_t cp) {
 }
 
 bool isSpace(uint32_t cp) {
-    return cp == ' ' || cp == '\n' || cp == '\r' || cp == '\t';
+    return cp == ' ' || cp == '\r';
 }
 
-map<State, map<CharType, State>> MAP = {
-    {State::START, {
-        {CharType::LETTER, State::ID},
-        {CharType::DIGIT, State::INT},
-        {CharType::DOT, State::ERR},
-        {CharType::OP, State::OP},
-        {CharType::SPACE, State::START},
-        {CharType::UNKNOWN, State::ERR},
-        {CharType::SEP, State::SEP},
-    }},
+TokenTypea getTokenType(string buffer, State state) {
+    switch(state) {
+        case State::ID:
+            if (keywords.count(buffer))
+                return TokenTypea::KEYWORD;
+            return TokenTypea::ID;
 
-    {State::ID, {
-        {CharType::LETTER, State::ID},
-        {CharType::DIGIT, State::ID},
-        {CharType::DOT, State::ERR},
-        {CharType::OP, State::END},
-        {CharType::SPACE, State::END},
-        {CharType::UNKNOWN, State::ERR},
-        {CharType::SEP, State::END},
-    }},
+        case State::INT:
+            return TokenTypea::INT;
 
-    {State::INT, {
-        {CharType::LETTER, State::ERR},
-        {CharType::DIGIT, State::INT},
-        {CharType::DOT, State::FLOAT_DOT},
-        {CharType::OP, State::END},
-        {CharType::SPACE, State::END},
-        {CharType::UNKNOWN, State::ERR},
-        {CharType::SEP, State::END},
-    }},
+        case State::FLOAT:
+            return TokenTypea::FLOAT;
 
-    {State::FLOAT_DOT, {
-        {CharType::LETTER, State::ERR},
-        {CharType::DIGIT, State::FLOAT},
-        {CharType::DOT, State::ERR},
-        {CharType::OP, State::ERR},
-        {CharType::SPACE, State::ERR},
-        {CharType::UNKNOWN, State::ERR},
-        {CharType::SEP, State::ERR},
-    }},
+        case State::OP:
+            if (buffer == "*" || buffer == "/")
+                return TokenTypea::MULTIPLICATIVE_OPERATOR;
+            if (buffer == "<" || buffer == ">" || buffer == "==" || buffer == "<=" || buffer == ">=" || buffer == "!=")
+                return TokenTypea::COMPARISON_OPERATOR;
+            if (buffer == "=")
+                return TokenTypea::ASSIGNMENT_OPERATOR;
+            return TokenTypea::ADDITIVE_OPERATOR;
 
-    {State::FLOAT, {
-        {CharType::LETTER, State::ERR},
-        {CharType::DIGIT, State::FLOAT},
-        {CharType::DOT, State::ERR},
-        {CharType::OP, State::END},
-        {CharType::SPACE, State::END},
-        {CharType::UNKNOWN, State::ERR},
-        {CharType::SEP, State::END},
-    }},
+        case State::SEP:
+            return TokenTypea::DELIMITER;
 
-    {State::OP, {
-        {CharType::LETTER, State::END},
-        {CharType::DIGIT, State::END},
-        {CharType::DOT, State::ERR},
-        {CharType::OP, State::END},
-        {CharType::SPACE, State::END},
-        {CharType::UNKNOWN, State::ERR},
-        {CharType::SEP, State::END},
-    }},
-
-    {State::ERR, {
-        {CharType::LETTER, State::ERR},
-        {CharType::DIGIT, State::ERR},
-        {CharType::DOT, State::ERR},
-        {CharType::OP, State::ERR},
-        {CharType::SPACE, State::END},
-        {CharType::UNKNOWN, State::ERR},
-        {CharType::SEP, State::ERR},
-    }},
-
-    {State::SEP, {
-        {CharType::LETTER, State::END},
-        {CharType::DIGIT, State::END},
-        {CharType::DOT, State::ERR},
-        {CharType::OP, State::END},
-        {CharType::SPACE, State::END},
-        {CharType::UNKNOWN, State::ERR},
-        {CharType::SEP, State::END},
-    }},
-};
-
-
-int main() {
-    setlocale(LC_ALL, ".utf8");
-    ifstream in("C:/Users/akzak/Desktop/TSU/compilation/test.zmii", ios::binary);
-    string text((istreambuf_iterator<char>(in)), {});
-
-    State state = State::START;
-
-    if (!utf8::is_valid(text.begin(), text.end())) {
-        cerr << "Файл содержит некорректный UTF-8!" << endl;
-        return 1;
+        default:
+            return TokenTypea::ERR;
     }
+}
+
+list<Token> lexer(string text) {
+    list<Token> tokens;
+    State state = State::START;
+    int start_column = 0, column = 0, line = 1;
 
     string::iterator it = text.begin();
 
@@ -157,44 +69,55 @@ int main() {
         CharType charType;
         uint32_t cp = utf8::next(it, text.end());
 
+        column++;
         if (isLetter(cp)) charType = CharType::LETTER;
         else if (isDigit(cp)) charType = CharType::DIGIT;
         else if (cp == '.') charType = CharType::DOT;
         else if (isSpace(cp)) charType = CharType::SPACE;
-        else if (cp == '=' || cp == '+' || cp == '-' || cp == '/' || cp == '*')
+        else if (cp == '=' || cp == '+' || cp == '-' || cp == '/' || cp == '*' || cp == '<' || cp == '>' || cp == '!')
             charType = CharType::OP;
-        else if (cp == '[' || cp == ']' || cp == '(' || cp == ')' || cp == ',')
+        else if (cp == '[' || cp == ']' || cp == '(' || cp == ')' || cp == ',' || cp == ':')
             charType = CharType::SEP;
+        else if (cp == '\n') {
+            charType = CharType::SPACE;
+            line++;
+            column = 0;
+        }
         else
             charType = CharType::UNKNOWN;
 
 
-        State next_state = MAP[state][charType];
-        cout << stateToString(state) << " got " << charTypeToString(charType) << " -> " << stateToString(next_state) << endl;
-        State newState = State::ERR;
+        State next_state = MAP.at(state).at(charType);
+        cout << stateToString(state) << " got " << charTypeToString(charType) << " at " << column << " -> " << stateToString(next_state)  << endl;
 
         if (state == State::START && charType == CharType::SPACE) {
             state = State::START;
             continue;
         }
 
-        if (MAP[state].count(charType)) {
-            newState = MAP[state][charType];
-        }
-
-        if (newState == State::END) {
-            //cout << "TOKEN: " << buffer << endl;
-            cout << "TOKEN: " << tokenType(buffer, state) << " \"" << buffer << "\"" << endl;
+        if (next_state == State::END) {
+            column--;
+            tokens.push_back(Token(getTokenType(buffer, state), buffer, line, column));
             buffer.clear();
             state = State::START;
-
-            // этот символ уже относится к следующему токену
-            // поэтому откатываем итератор назад
             it = charStart;
         } else {
             buffer.append(charStart, it);
-            state = newState;
+            state = next_state;
         }
+    }
+    return tokens;
+}
+
+
+int main() {
+    setlocale(LC_ALL, ".utf8");
+    ifstream in("C:/Users/akzak/Desktop/TSU/compilation/test.zmii", ios::binary);
+    string text((istreambuf_iterator<char>(in)), {});
+
+    list<Token> tokens = lexer(text);
+    for (const Token& token : tokens) {
+        cout << token.repr() << endl;
     }
 
     in.close();
