@@ -17,6 +17,8 @@
 #include <cmath>
 #include <ctime>
 #include <map>
+#include <set>
+#include <list>
 
 #define СУДЬБЫ_ПОДАРОК RAND_MAX
 #define выкарчевать sqrt
@@ -113,8 +115,13 @@
 #define меняло swap
 #define отщипнуть get
 #define карта map
+#define опись set
+#define стопка list
 #define нули_да_целиночки ios::binary
 #define пробежка_по_оттоку_Байкала istreambuf_iterator
+#define пробежка iterator
+#define сыскать at
+#define вставить push_back
 
 внедрить целина = int;
 внедрить вель_дробь = double;
